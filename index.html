@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For Xiaoqing</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(200, 200, 200, 0.4);
+            --text-main: #5e4b52;
+            --text-sub: #9e8a90;
+            --heart-color: #e5989b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            background-color: #fcefed;
+            position: relative;
+        }
+
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            /* 让鼠标事件穿透到 body */
+        }
+
+        .card {
+            position: relative;
+            z-index: 10;
+            width: 88%;
+            max-width: 400px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border-radius: 28px;
+            border: 1px solid var(--glass-border);
+            box-shadow:
+                0 25px 50px -10px rgba(168, 112, 112, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+            padding: 50px 32px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--heart-color);
+            opacity: 0.9;
+        }
+
+        h1 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            line-height: 1.4;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            margin-bottom: 45px;
+            font-family: 'Noto Serif SC', serif;
+            font-style: italic;
+            opacity: 0.9;
+        }
+
+        .btn-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: relative;
+            min-height: 140px;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 50px;
+            padding: 16px 0;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.3, 0.7, 0.4, 1);
+            position: relative;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .btn-yes {
+            background: linear-gradient(135deg, #e5989b 0%, #d4a5a5 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(212, 165, 165, 0.4);
+            z-index: 100;
+        }
+
+        .btn-yes:active {
+            transform: scale(0.97);
+        }
+
+        .btn-no {
+            background: rgba(255, 255, 255, 0.5);
+            /* 增加一点背景让它更好点 */
+            color: var(--text-sub);
+            border: 1px solid rgba(158, 138, 144, 0.3);
+            backdrop-filter: blur(5px);
+            z-index: 101;
+            /* 确保能点到 */
+        }
+
+        .btn-no:hover {
+            border-color: rgba(158, 138, 144, 0.5);
+            color: var(--text-main);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 245, 245, 0.6);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .modal-inner {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 45px 35px;
+            border-radius: 30px;
+            box-shadow: 0 30px 60px rgba(168, 112, 112, 0.15);
+            text-align: center;
+            max-width: 320px;
+            width: 85%;
+            border: 1px solid white;
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .heart-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+            background: linear-gradient(45deg, #e5989b, #b5838d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: littleBeat 1.2s infinite ease-in-out;
+        }
+
+        @keyframes littleBeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .modal-text {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.15rem;
+            color: #6d5c60;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .modal-btn {
+            display: inline-block;
+            color: #d4a5a5;
+            font-family: 'Noto Serif SC', serif;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            border-bottom: 1px dashed #d4a5a5;
+            padding-bottom: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="card">
+        <div class="card-icon">❦</div>
+        <h1>一份不可退货的契约</h1>
+        <p class="subtitle">To My Dearest Xiaoqing</p>
+
+        <div class="btn-container">
+            <button class="btn-yes" id="btnYes">我愿意 (Yes, I Do)</button>
+            <button class="btn-no" id="btnNo">才不呢 (No Way)</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-inner">
+            <span class="heart-icon">♥</span>
+            <p class="modal-text">
+                我就知道！<br>
+                康康永远是小青的妻子，<br>
+                不可以退货哦！
+            </p>
+            <br>
+            <a href="#" class="modal-btn" onclick="window.location.reload()">Love You Forever</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script>
+        // 粒子背景逻辑 (保持不变，因为用户说特效符合要求)
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        const particleCount = 60;
+
+        // 修正：触摸时不应干扰按钮点击，所以鼠标交互仅作用于背景
+        // 由于 canvas 在底层 pointer-events: none, 
+        // 我们需要监听 window 的 move 事件来控制粒子，但不阻挡点击
+        let mouse = { x: null, y: null };
+        window.addEventListener('resize', initCanvas);
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('touchmove', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width; this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+                this.color = Math.random() > 0.5 ? 'rgba(229, 152, 155, ' : 'rgba(212, 165, 165, ';
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x; let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 200) {
+                        const force = (200 - distance) / 200;
+                        this.vx -= (dx / distance) * force * 0.05;
+                        this.vy -= (dy / distance) * force * 0.05;
+                    }
+                }
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + '0.6)'; ctx.fill();
+            }
+        }
+        function initCanvas() {
+            width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
+            particles = []; for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+        }
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update(); particles[i].draw();
+                for (let j = i; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x; let dy = particles[i].y - particles[j].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        ctx.beginPath(); ctx.strokeStyle = 'rgba(212, 165, 165, ' + (1 - dist / 150) * 0.3 + ')';
+                        ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        initCanvas(); animate();
+
+        // ------------------------------------------------
+        // 交互逻辑 Refined
+        // ------------------------------------------------
+        const btnYes = document.getElementById('btnYes');
+        const btnNo = document.getElementById('btnNo');
+        const modal = document.getElementById('modal');
+        const modalInner = document.querySelector('.modal-inner');
+        let scaleFactor = 1;
+
+        btnYes.addEventListener('click', () => {
+            const duration = 2500;
+            const end = Date.now() + duration;
+            (function frame() {
+                const colors = ['#e5989b', '#ffb4a2', '#b5838d'];
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: colors, shapes: ['heart'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: colors, shapes: ['heart'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+
+            setTimeout(() => {
+                modal.style.display = 'flex';
+                modal.offsetHeight; modal.style.opacity = '1';
+                modalInner.style.transform = 'scale(1)';
+            }, 500);
+        });
+
+        // "No" 按钮逻辑
+        btnNo.addEventListener('click', (e) => {
+            // 阻止默认
+            e.preventDefault();
+
+            // 1. Yes 变大
+            scaleFactor += 0.3;
+            btnYes.style.transform = `scale(${scaleFactor})`;
+            // 保证 Yes在最上层
+            btnYes.style.zIndex = 999;
+
+            // 2. No 跳跃 (范围缩小版)
+            // 定义活动范围为屏幕宽度的 30%，高度的 30%
+            const rangeW = window.innerWidth * 0.3;
+            const rangeH = window.innerHeight * 0.3;
+
+            // 计算偏移量，使其居中
+            const offsetX = (window.innerWidth - rangeW) / 2;
+            const offsetY = (window.innerHeight - rangeH) / 2;
+
+            const btnW = btnNo.offsetWidth;
+            const btnH = btnNo.offsetHeight;
+
+            // 生成新坐标 (相对偏移量 + 随机范围)
+            // 确保按钮不出这个缩小后的范围
+            const newLeft = offsetX + Math.random() * (rangeW - btnW);
+            const newTop = offsetY + Math.random() * (rangeH - btnH);
+
+            // 设置 fixed 定位
+            btnNo.style.position = 'fixed';
+            btnNo.style.left = newLeft + 'px';
+            btnNo.style.top = newTop + 'px';
+        });
+
+    </script>
+</body>
+
+</html>
